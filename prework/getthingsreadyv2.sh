@@ -246,6 +246,18 @@ if [ $(kubectl -n trident get tver -o=jsonpath='{.items[0].trident_version}') !=
     tar -xf ~/tarballs/trident-installer-24.02.0.tar.gz
     rm -f /usr/bin/tridentctl
     cp trident-installer/tridentctl /usr/bin/
+    
+    echo
+    echo "##########################"
+    echo "# download ACP package"
+    echo "##########################"
+    wget https://netapp-my.sharepoint.com/:u:/p/yweisser/EQof7y5Fe3tKn53H8jGGw-oBwDRtPaY3wgkoTAe_QnjGHA?download=1 -O ~/tarballs/trident-acp-24.02.0.tar
+    packsize=$(du --apparent-size --block-size=1 ~/tarballs/trident-acp-24.02.0.tar | awk '{ print $1}')
+    if [ $packsize -lt 1000000 ]; then
+      echo "Seems like the OneDrive link is not valid anymore... Ask Yvos to renew the share !"
+      echo "When the link is updated, you can restart the script"
+      exit
+    fi
 
     echo
     echo "###############################################"
