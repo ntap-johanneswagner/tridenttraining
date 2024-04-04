@@ -236,6 +236,7 @@ echo "############################"
 
 #trident 24.02 upgrade
 if [ $(kubectl -n trident get tver -o=jsonpath='{.items[0].trident_version}') != "24.02.0" ]; then
+    cd
     echo
     echo "############################################"
     echo "# download Trident package"
