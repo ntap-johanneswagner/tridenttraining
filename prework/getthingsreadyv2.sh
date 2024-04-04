@@ -247,6 +247,15 @@ if [ $(kubectl -n trident get tver -o=jsonpath='{.items[0].trident_version}') !=
     cp trident-installer/tridentctl /usr/bin/
 
     echo
+    echo "###############################################"
+    echo "# upload ACP image to the private registry"
+    echo "###############################################"
+    podman login -u registryuser -p Netapp1! registry.demo.netapp.com
+    podman load --input ~/tarballs/trident-acp-24.02.0.tar
+    podman tag trident-acp:24.02.0-linux-amd64 registry.demo.netapp.com/trident-acp:24.02.0
+    podman push registry.demo.netapp.com/trident-acp:24.02.0
+
+    echo
     echo "####################################################"
     echo "# launch the Trident upgrade on both RKE clusters"
     echo "####################################################"
@@ -291,65 +300,6 @@ if [ $(kubectl -n trident get tver -o=jsonpath='{.items[0].trident_version}') !=
       for frame in $frames; do
         sleep 0.5; printf "\rWaiting for Trident to be ready $frame" 
       done
-    done
-fi
-
-#trident acp enablement
-if [ $(kubectl get -n trident pod | grep Running | grep -e '7/7' | wc -l) -ne 1 ]; then
-    
-    echo
-    echo "##########################"
-    echo "# download ACP package"
-    echo "##########################"
-    wget https://netapp-my.sharepoint.com/:u:/p/yweisser/EQof7y5Fe3tKn53H8jGGw-oBwDRtPaY3wgkoTAe_QnjGHA?download=1 -O ~/tarballs/trident-acp-24.02.0.tar
-    packsize=$(du --apparent-size --block-size=1 ~/tarballs/trident-acp-24.02.0.tar | awk '{ print $1}')
-    if [ $packsize -lt 1000000 ]; then
-      echo "Seems like the OneDrive link is not valid anymore... Ask Yvos to renew the share !"
-      echo "When the link is updated, you can restart the script"
-      exit
-    fi
-
-    echo
-    echo "###############################################"
-    echo "# upload ACP image to the private registry"
-    echo "###############################################"
-    podman login -u registryuser -p Netapp1! registry.demo.netapp.com
-    podman load --input ~/tarballs/trident-acp-24.02.0.tar
-    podman tag trident-acp:24.02.0-linux-amd64 registry.demo.netapp.com/trident-acp:24.02.0
-    podman push registry.demo.netapp.com/trident-acp:24.02.0
-
-    echo
-    echo "##########################"
-    echo "# Enable ACP on RKE1"
-    echo "##########################"
-    export KUBECONFIG=/root/kubeconfigs/rke1/kube_config_cluster.yml
-    kubectl -n trident patch torc/trident --type=json -p='[ 
-        {"op":"add", "path":"/spec/enableACP", "value": true},
-        {"op":"add", "path":"/spec/acpImage","value": "registry.demo.netapp.com/trident-acp:24.02.0"}
-    ]'
-
-    frames="/ | \\ -"
-    while [ $(kubectl get -n trident pod | grep Running | grep -e '1/1' -e '2/2' -e '7/7' | wc -l) -ne 5 ]; do
-        for frame in $frames; do
-            sleep 0.5; printf "\rWaiting for ACP to be ready $frame" 
-        done
-    done
-
-    echo
-    echo "##########################"
-    echo "# Enable ACP on RKE2"
-    echo "##########################"
-    export KUBECONFIG=/root/kubeconfigs/rke2/kube_config_cluster.yml
-    kubectl -n trident patch torc/trident --type=json -p='[ 
-        {"op":"add", "path":"/spec/enableACP", "value": true},
-        {"op":"add", "path":"/spec/acpImage","value": "registry.demo.netapp.com/trident-acp:24.02.0"}
-    ]'
-
-    frames="/ | \\ -"
-    while [ $(kubectl get -n trident pod | grep Running | grep -e '1/1' -e '2/2' -e '7/7' | wc -l) -ne 5 ]; do
-        for frame in $frames; do
-            sleep 0.5; printf "\rWaiting for ACP to be ready $frame" 
-        done
     done
 fi
 
