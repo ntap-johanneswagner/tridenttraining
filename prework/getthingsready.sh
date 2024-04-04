@@ -1,6 +1,9 @@
 #!/bin/bash
 # SCRIPT TO RUN ON HELPER1
 
+echo "############################"
+echo "# start upgrade to 23.10:"; date
+echo "############################"
 
 cd
 
@@ -231,6 +234,9 @@ echo "# upgrade to 23.10 finished on:"; date
 echo "############################"
 
 
+echo "############################"
+echo "# start upgrade to 24.02:"; date
+echo "############################"
 
 cd
 
@@ -421,6 +427,11 @@ echo "# upgrade to 24.02 finished on:"; date
 echo "############################"
 
 echo
+echo "############################"
+echo "# start finetuning"; date
+echo "############################"
+
+echo
 echo "########################################"
 echo "# Configure iSCSI on the RKE2 nodes"
 echo "########################################"
@@ -557,13 +568,43 @@ curl -X POST -ku admin:Netapp1! -H "accept: application/json" -H "Content-Type: 
   "svm": { "name": "svm1" }
 }' "https://cluster1.demo.netapp.com/api/protocols/san/iscsi/services"
 
-kubectl completion bash | tee /etc/bash_completion.d/kubectl > /dev/null
-tridentctl completion bash > /etc/bash_completion.d/tridentctl
+echo
+echo "#######################################################################################################"
+echo "# labeling k8s in rke1 nodes for topology
+echo "#######################################################################################################"
+
+export KUBECONFIG=/root/kubeconfigs/rke1/kube_config_cluster.yml
+
+kubectl label node cp1.rke1.demo.netapp.com "topology.kubernetes.io/region=west" --overwrite
+kubectl label node cp2.rke1.demo.netapp.com "topology.kubernetes.io/region=west" --overwrite
+kubectl label node cp3.rke1.demo.netapp.com "topology.kubernetes.io/region=east" --overwrite
+
+kubectl label node cp1.rke1.demo.netapp.com "topology.kubernetes.io/zone=west1" --overwrite
+kubectl label node cp2.rke1.demo.netapp.com "topology.kubernetes.io/zone=west1" --overwrite
+kubectl label node cp3.rke1.demo.netapp.com "topology.kubernetes.io/zone=east1" --overwrite
+
+echo
+echo "#######################################################################################################"
+echo "# labeling k8s in rke2 nodes for topology
+echo "#######################################################################################################"
+
+export KUBECONFIG=/root/kubeconfigs/rke2/kube_config_cluster.yml
+
+kubectl label node cp1.rke2.demo.netapp.com "topology.kubernetes.io/region=west" --overwrite
+kubectl label node cp2.rke2.demo.netapp.com "topology.kubernetes.io/region=west" --overwrite
+kubectl label node cp3.rke2.demo.netapp.com "topology.kubernetes.io/region=east" --overwrite
+
+kubectl label node cp1.rke2.demo.netapp.com "topology.kubernetes.io/zone=west1" --overwrite
+kubectl label node cp2.rke2.demo.netapp.com "topology.kubernetes.io/zone=west1" --overwrite
+kubectl label node cp3.rke2.demo.netapp.com "topology.kubernetes.io/zone=east1" --overwrite
 
 echo
 echo "#######################################################################################################"
 echo "# ADD ALIAS TO BASHRC (need to reload bash after the completion of this script)"
 echo "#######################################################################################################"
+
+kubectl completion bash | tee /etc/bash_completion.d/kubectl > /dev/null
+tridentctl completion bash > /etc/bash_completion.d/tridentctl
 
 cp ~/.bashrc ~/.bashrc.bak
 cat <<EOT >> ~/.bashrc
@@ -578,3 +619,8 @@ alias kedit='kubectl edit'
 alias kx='kubectl exec'
 alias trident='tridentctl -n trident'
 EOT
+
+echo
+echo "############################"
+echo "# finished script"; date
+echo "############################"
