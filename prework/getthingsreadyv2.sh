@@ -465,7 +465,7 @@ curl -X POST -ku admin:Netapp1! -H "accept: application/json" -H "Content-Type: 
 
 echo
 echo "#######################################################################################################"
-echo "# labeling k8s in rke1 nodes for topology
+echo "# labeling k8s in rke1 nodes for topology"
 echo "#######################################################################################################"
 
 export KUBECONFIG=/root/kubeconfigs/rke1/kube_config_cluster.yml
@@ -480,7 +480,7 @@ kubectl label node cp3.rke1.demo.netapp.com "topology.kubernetes.io/zone=east1" 
 
 echo
 echo "#######################################################################################################"
-echo "# labeling k8s in rke2 nodes for topology
+echo "# labeling k8s in rke2 nodes for topology"
 echo "#######################################################################################################"
 
 export KUBECONFIG=/root/kubeconfigs/rke2/kube_config_cluster.yml
