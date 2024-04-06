@@ -2,9 +2,9 @@
 
 ## :trident: Scenario 01 - storage classes, persistent volumes & persistent volume claims 
 ____
-**Remember: All required files are in the folder */home/user/hands-on/scenario01* please ensure that you are in this folder now. You can do this with the command** 
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario01* please ensure that you are in this folder now. You can do this with the command** 
 ```console
-cd /home/user/hands-on/scenario01
+cd /home/user/tridenttraining/scenario01
 ```
 ____
 In this scenario, you will create two StorageClasses, discovery their capabilities, create PVCs and do some basic troubleshooting. 
@@ -197,6 +197,7 @@ kubectl get pv | grep funwithpvcs
 ```
 
 Magic, both PVCs are gone (well... we advised k8s to remove them...) but one PV is still there? No not real magic, just the normal behaviour of the specified ReclaimPolicy. As described before, the default ReclaimPolicy is *Delete*. This means as soon as the corresponding PVC is deleted, the PV will be deleted too. In some use cases this would delete valuable data. To avoid this, you can set the ReclaimPolicy to *Retain*. If the PVC is deleted now, the PV will change its Status from *Bound* to *Released*. The PV could be used again.  
+Important to know: It is specified in the [Kubernetes Documentation](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#retain) that "retain" also means that you have to delete the storage assets manually. A lot of people are not aware of this kubernetes behavior which could lead to orphaned data on the storage, only the storage administrator is aware of. To avoid this, always patch the retention policy of the PV to "delete" before it is deleted in kubernetes.
 
 Awesome, you are now able to request storage...but as long as no appliaction is using that, there is no real sense of having persistent storage. Let's create an application that is able to do something with the storage. We don't want to show just the next Wordpress Demo and we want to have some fun. Due to this, we will now bring Pac-Man to Kubernetes.  
 
@@ -292,9 +293,9 @@ Have some fun, create some highscore, we will need that in a later lab.
 
 ## :trident: Scenario 02 - running out of space? Let's expand the volume 
 ____
-**Remember: All required files are in the folder */home/user/hands-on/scenario02* please ensure that you are in this folder now. You can do this with the command** 
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario02* please ensure that you are in this folder now. You can do this with the command** 
 ```console
-cd /home/user/hands-on/scenario02
+cd /home/user/tridenttraining/scenario02
 ```
 ____
 Sometimes you need more space than you thought before. For sure you could create a new volume, copy the data and work with the new bigger PVC but it is way easier to just expand the existing.

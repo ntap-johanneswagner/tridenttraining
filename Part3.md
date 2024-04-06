@@ -2,9 +2,9 @@
 
 ## :trident: Scenario 05 -  snapshots, clones etc 
 ___
-**Remember: All required files are in the folder */home/user/hands-on/scenario05*. Please ensure that you are in this folder. You can do this with the command** 
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario05*. Please ensure that you are in this folder. You can do this with the command** 
 ```console
-cd /home/user/hands-on/scenario05
+cd /home/user/tridenttraining/scenario05
 ```
 ___
 CSI Snapshots have been promoted GA with Kubernetes 1.20.  
@@ -165,9 +165,12 @@ kubectl delete ns busybox
 
 ## :trident: Scenario 06 - Consumption control 
 ___
-**Remember: All required files are in the folder */home/user/hands-on/scenario06*. Please ensure that you are in this folder. You can do this with the command**
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario06*. Please ensure that you are in this folder. You can do this with the command**
+
+# TODO include more scenarios and some storage specific things
+
 ```console
-cd /home/user/hands-on/scenario06
+cd /home/user/tridenttraining/scenario06
 ```
 ___
 There are many different ways to control the storage consumption. We will focus on the possibilities of K8s itself. However please remember: Sometimes the same thing can also be achieved at storage or csi driver level and it might be preferred to do it there.

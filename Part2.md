@@ -9,13 +9,13 @@ In this exercise, we will create a MySQL StatefulSet & Scale it.
 <p align="center"><img src="Images/statefulset.jpg"></p>
 
 ____
-**Remember: All required files are in the folder */home/user/hands-on/scenario03* please ensure that you are in this folder now. You can do this with the command** 
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario03* please ensure that you are in this folder now. You can do this with the command** 
 ```console
-cd /home/user/hands-on/scenario03
+cd /home/user/tridenttraining/scenario03
 ```
 ____
 
-## A. Let's start by creating the application
+## 1. Let's start by creating the application
 
 This application is based on 3 elements:
 
@@ -28,22 +28,19 @@ This application is based on 3 elements:
 :mag_right:  
 
 ```bash
-$ kubectl create namespace mysql
-namespace/mysql created
-
-$ kubectl create -n mysql -f mysql-configmap.yaml
-configmap/mysql created
-$ kubectl create -n mysql -f mysql-services.yaml
-service/mysql created
-service/mysql-read created
-$ kubectl create -n mysql -f mysql-statefulset.yaml
-statefulset.apps/mysql created
+kubectl create namespace mysql
+kubectl create -n mysql -f mysql-configmap.yaml
+kubectl create -n mysql -f mysql-services.yaml
+kubectl create -n mysql -f mysql-statefulset.yaml
 ```
 
 It will take a few minutes for all the replicas to be created, I will then suggest using the _watch_ flag:
 
 ```bash
-$ kubectl -n mysql get pod --watch
+kubectl -n mysql get pod --watch
+```
+This will rerun your command again and again and watch for changes in the output. If there are any, it will write those in one new line.
+```bash
 mysql-0   1/2     Running   0          43s   10.36.0.1   rhel1   <none>           <none>
 mysql-0   2/2     Running   0          52s   10.36.0.1   rhel1   <none>           <none>
 mysql-1   0/2     Pending   0          0s    <none>      <none>   <none>           <none>
@@ -62,19 +59,21 @@ Once you verified that the third POD is up & running, you are good to go
 Now, check the storage. You can see that 3 PVC were created, one per POD.
 
 ```bash
-$ kubectl get -n mysql pvc
+kubectl get -n mysql pvc
+```
+```bash
 NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
 persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   10Gi       RWO            storage-class-nas   5m
 persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   10Gi       RWO            storage-class-nas   5m
 persistentvolumeclaim/data-mysql-2   Bound    pvc-99f98294-85f6-4a69-8f50-eb454ed00868   10Gi       RWO            storage-class-nas   4m
 ```
-## B. Let's write some data in this database !
+## 2. Let's write some data in this database !
 
 To connect to MySQL, we will use another POD which will connect to the master DB (mysql-0).  
 Copy & paste the whole block at once:
 
 ```bash
-$ kubectl run mysql-client -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i --rm --restart=Never -- mysql -h mysql-0.mysql <<EOF
+kubectl run mysql-client -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i --rm --restart=Never -- mysql -h mysql-0.mysql <<EOF
 CREATE DATABASE test;
 CREATE TABLE test.messages (message VARCHAR(250));
 INSERT INTO test.messages VALUES ('hello');
@@ -84,8 +83,11 @@ EOF
 Let's check that the operation was successful by reading the database, through the service called _mysql-read_
 
 ```bash
-$ kubectl run mysql-client -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i -t --rm --restart=Never -- mysql -h mysql-read -e "SELECT * FROM test.messages"
-If you don't see a command prompt, try pressing enter.
+kubectl run mysql-client -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i -t --rm --restart=Never -- mysql -h mysql-read -e "SELECT * FROM test.messages"
+```
+
+If you don't see a command prompt, try pressing enter. If everything has worked, you should see the following output:
+```bash
 +---------+
 | message |
 +---------+
@@ -94,14 +96,17 @@ If you don't see a command prompt, try pressing enter.
 pod "mysql-client" deleted
 ```
 
-## C. Where are my reads coming from ?
+## 3. Where are my reads coming from ?
 
 In the current setup, _writes_ are done on the master DB, wheareas _reads_ can come from any DB POD.  
 Let's check this!  
 First, open a new Terminal tab (File --> Open Tab). You can then run the following, which will display the ID of the database followed by a timestamp. 
 
 ```bash
-$ kubectl run mysql-client-loop -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i -t --rm --restart=Never -- bash -ic "while sleep 1; do mysql -h mysql-read -e 'SELECT @@server_id,NOW()'; done"
+kubectl run mysql-client-loop -n mysql --image=quay.io/trident-mirror/kcduk/mysql:5.7.30 -i -t --rm --restart=Never -- bash -ic "while sleep 1; do mysql -h mysql-read -e 'SELECT @@server_id,NOW()'; done"
+```
+
+```bash
 +-------------+---------------------+
 | @@server_id | NOW()               |
 +-------------+---------------------+
@@ -117,12 +122,14 @@ $ kubectl run mysql-client-loop -n mysql --image=quay.io/trident-mirror/kcduk/my
 As you can see, _reads_ are well distributed between all the PODs.  
 Keep this tab open but switch back to the first tab for now...
 
-## D. Let's scale !
+## 4. Let's scale !
 
 Scaling an application with Kubernetes is pretty straightforward & can be achieved with the following command:
 
 ```bash
-$ kubectl scale statefulset mysql -n mysql --replicas=4
+kubectl scale statefulset mysql -n mysql --replicas=4
+```
+```bash
 statefulset.apps/mysql scaled
 ```
 
@@ -130,7 +137,9 @@ You can use the _kubectl get pod_ with the _--watch_ parameter again to see the 
 When done, you should have someething similar to this:
 
 ```bash
-$ kubectl get pod -n mysql
+kubectl get pod -n mysql
+```
+```bash
 NAME      READY   STATUS    RESTARTS   AGE
 mysql-0   2/2     Running   0          12m
 mysql-1   2/2     Running   0          12m
@@ -142,7 +151,9 @@ Notice the last POD is _younger_ that the other ones...
 Again, check the storage. You can see that a new PVC was automatically created.
 
 ```bash
-$ kubectl get -n mysql pvc
+kubectl get -n mysql pvc
+```
+```bash
 NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
 persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   10Gi       RWO            storage-class-nas   15m
 persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   10Gi       RWO            storage-class-nas   15m
@@ -170,10 +181,12 @@ Also, if the second tab is still open, you should start seeing new _id_ ('103' a
 +-------------+---------------------+
 ```
 
-## E. Clean up
+## 5. Clean up
 
 ```bash
-$ kubectl delete namespace mysql
+kubectl delete namespace mysql
+```
+```bash
 namespace "mysql" deleted
 ```
 
@@ -197,9 +210,9 @@ In a real environment, you will probably use a different storage platform in eac
 <p align="center"><img src="Images/topology.jpg"></p>
 
 ____
-**Remember: All required files are in the folder */home/user/hands-on/scenario04* please ensure that you are in this folder now. You can do this with the command** 
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario04* please ensure that you are in this folder now. You can do this with the command** 
 ```console
-cd /home/user/hands-on/scenario04
+cd /home/user/ridenttraining/scenario04
 ```
 ____
 
@@ -213,8 +226,43 @@ kubectl get nodes --show-labels
 
 
 We are going to create two new Trident backends, each one pointing to a different region.  
-You can see in the json files that we use a parameter called **supportedTopologies** to specify this.
+You can see in the yaml files that we use a parameter called **supportedTopologies** to specify this.
 This is specific to the Trident CSI driver and will be different, depending on the CSI driver you are using.
+
+Let's have a look at one of the backends:
+```bash
+cat backend-east.yaml
+```
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-ontap
+type: Opaque
+stringData:
+  username: vsadmin
+  password: Netapp1!
+---
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-tbc-ontap-nas-east
+spec:
+  version: 1
+  backendName: nas-east
+  storageDriverName: ontap-nas
+  managementLIF: 192.168.0.133
+  storagePrefix: east_
+  credentials:
+    name: backend-ontap
+  supportedTopologies:
+    - topology.kubernetes.io/region: east
+    - topology.kubernetes.io/zone: east1
+```
+
+As you can see, we've specified this backend to be used for the region "east" and the zone "east1"
+
+Now let's create both backends.
 
 ```bash
 kubectl create -n trident -f backend-east.yaml 
@@ -224,44 +272,75 @@ kubectl create -n trident -f backend-west.yaml
 We can now create a Kubernetes Storage Class that does not necessarily point to a particular Trident Backend.  
 We will use the _sc_topology.yaml_ file which refers to both regions & zones. One could decide to implement separate storage classes (1 for each region), however, letting Trident decide where to create the volume based on one single Storage Class is easier to manage.
 
-```bash
-$ kubectl create -f sc-topology.yaml
-storageclass.storage.k8s.io/sc-topology created
+Before using it, let's have a quick look:
 
-$ kubectl get sc
+```bash
+cat sc-topology.yaml
+```
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sc-topology
+provisioner: csi.trident.netapp.io
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.kubernetes.io/zone
+    values:
+    - east1
+    - west1
+  - key: topology.kubernetes.io/region
+    values:
+    - east
+    - west
+parameters:
+  backendType: "ontap-nas"
+  storagePools: "nas-east:aggr1;nas-west:aggr1"
+```
+
+As you can see, this sc will care about the zones "east1", "west1" and the regions "east", "west".
+You will also notice that these is a specific optional parameter in this storage class: **volumeBindingMode** set to _WaitForFirstConsumer_ (default value: _Immediate_).  This means that the PVC will not be created until referenced in a POD.  
+
+Create the sc and have a look at the result:
+
+```bash
+kubectl create -f sc-topology.yaml
+```
+```bash
+kubectl get sc
+```
+```bash
 NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 sc-topology          csi.trident.netapp.io   Delete          WaitForFirstConsumer   false                  6m39s
 ```
 
-You will also notice that these is a specific optional parameter in this storage class: **volumeBindingMode** set to _WaitForFirstConsumer_ (default value: _Immediate_).  This means that the PVC will not be created until referenced in a POD.  
-
 Let's use a specific namespace for this scenario:  
 
 ```bash
-$ kubectl create ns topology
-namespace/topology created
+kubectl create ns topology
 ```
 
 This directory contains 2 sets of PVC/POD, one for each region. Let's start by creating the PVC:
 
 ```bash
-$ kubectl create -n topology -f pvc_east.yaml
-persistentvolumeclaim/pvc-east created
+kubectl create -n topology -f pvc_east.yaml
+kubectl create -n topology -f pvc_west.yaml
+kubectl get pvc -n topology
+```
 
-$ kubectl create -n topology -f pvc_west.yaml
-persistentvolumeclaim/pvc-west created
-
-$ kubectl get pvc -n topology
+```bash
 NAME              STATUS    VOLUME             CAPACITY   ACCESS MODES   STORAGECLASS    AGE
 pvc-east          Pending                                                sc-topology     2s
 pvc-west          Pending                                                sc-topology     2s
-
 ```
 
-As you can see, both PVC have not yet been created, simply because of the _volumeBindingMode_ parameter set in the storage class.  
+As you can see, both PVC have not yet been created, simply because of the _volumeBindingMode_ parameter set in the storage class. Let's have a closer look:
 
 ```bash
-$ kubectl describe -n topology pvc pvc-west | grep -C 3 Events
+kubectl describe -n topology pvc pvc-west | grep -C 3 Events
+```
+```bash
 Access Modes:
 VolumeMode:    Filesystem
 Mounted By:    <none>
@@ -280,17 +359,16 @@ As expected:
 - the **EAST** Pod should run on **worker3** 
 
 ```bash
-$ kubectl create -n topology -f pod-busybox-west.yaml
-pod/busybox-west created
-
-$ kubectl create -n topology -f pod-busybox-east.yaml
-pod/busybox-east created
+kubectl create -n topology -f pod-busybox-west.yaml
+kubectl create -n topology -f pod-busybox-east.yaml
 ```
 
 Now that the PODs have been requested, you can also see that both PVC have been succesfully created.
 
 ```bash
-$ kubectl get pvc -n topology
+kubectl get pvc -n topology
+```
+```bash
 NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS     AGE
 pvc-east     Bound    pvc-d0a8aa71-840b-4248-92d6-850b680988a3   5Gi        RWX            sc-topology      15h
 pvc-west     Bound    pvc-f468c589-1a88-4393-a827-f6bd0b4c1902   5Gi        RWX            sc-topology      15h
@@ -299,12 +377,15 @@ pvc-west     Bound    pvc-f468c589-1a88-4393-a827-f6bd0b4c1902   5Gi        RWX 
 Finally, let's check that our 2 PODs have been created on the right hosts, as expected:
 
 ```bash
-$ kubectl get pod -n topology -o wide
+kubectl get pod -n topology -o wide
+```
+```bash
 NAME              READY   STATUS    RESTARTS   AGE     IP          NODE                         NOMINATED NODE   READINESS GATES
 busybox-east      1/1     Running   0          97s     10.44.0.8   worker3.rke1.demo.netapp.com   <none>           <none>
 busybox-west      1/1     Running   0          92s     10.36.0.5   worker1.rke1.demo.netapp.com   <none>           <none>
 ```
 
+# TODO include check on storage to see that the volumes have been created with different prefixes!!!
 
 ## Cleanup the environment
 
