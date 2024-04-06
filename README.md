@@ -35,16 +35,6 @@ git clone https://github.com/ntap-johanneswagner/tridenttraining
 
 You should now have several directories available. The lab is structured with different scenarios. Everything you need is placed in a folder with the same name. 
 
-5. As this lab is used for different things and has a lot of stuff in it that might be confusing, please run this little cleanup script which removes all things you don't need in this workshop, updates the environment to a recent version and creates some necessary stuff.   
-Please run the following commands:  
-**You will be asked to enter the password for user during the script. It is "Netapp1!"**
-
-```console
-cd /home/user/hands-on/prework
-bash prework.sh
-```
-
-
 We split the lab into multiple parts:
 
 [Part 1 - Storage in Kubernetes  - Overview](Part1.md)
