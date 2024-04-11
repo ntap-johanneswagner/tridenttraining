@@ -39,7 +39,7 @@ It will take a few minutes for all the replicas to be created, I will then sugge
 ```bash
 kubectl -n mysql get pod --watch
 ```
-This will rerun your command again and again and watch for changes in the output. If there are any, it will write those in one new line.
+This will rerun your command again and again and watch for changes in the output. If there are any, it will write those in one new line. To stop the watch command, just press ctrl+c. Sometimes the keyboard mapping in the lab is strange, so if ctrl+c isn't working, just close the terminal and reopen it.
 ```bash
 mysql-0   1/2     Running   0          43s   10.36.0.1   rhel1   <none>           <none>
 mysql-0   2/2     Running   0          52s   10.36.0.1   rhel1   <none>           <none>
@@ -63,9 +63,9 @@ kubectl get -n mysql pvc
 ```
 ```bash
 NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
-persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   10Gi       RWO            storage-class-nas   5m
-persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   10Gi       RWO            storage-class-nas   5m
-persistentvolumeclaim/data-mysql-2   Bound    pvc-99f98294-85f6-4a69-8f50-eb454ed00868   10Gi       RWO            storage-class-nas   4m
+persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   5Gi        RWO            storage-class-nas   5m
+persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   5Gi        RWO            storage-class-nas   5m
+persistentvolumeclaim/data-mysql-2   Bound    pvc-99f98294-85f6-4a69-8f50-eb454ed00868   5Gi        RWO            storage-class-nas   4m
 ```
 ## 2. Let's write some data in this database !
 
@@ -155,10 +155,10 @@ kubectl get -n mysql pvc
 ```
 ```bash
 NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
-persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   10Gi       RWO            storage-class-nas   15m
-persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   10Gi       RWO            storage-class-nas   15m
-persistentvolumeclaim/data-mysql-2   Bound    pvc-99f98294-85f6-4a69-8f50-eb454ed00868   10Gi       RWO            storage-class-nas   14m
-persistentvolumeclaim/data-mysql-3   Bound    pvc-8758aaaa-33ab-4b6c-ba42-874ce6028a49   10Gi       RWO            storage-class-nas   6m18s
+persistentvolumeclaim/data-mysql-0   Bound    pvc-f348ec0a-f304-49d8-bbaf-5a85685a6194   5Gi        RWO            storage-class-nas   15m
+persistentvolumeclaim/data-mysql-1   Bound    pvc-ce114401-5789-454a-ba1c-eb5453fbe026   5Gi        RWO            storage-class-nas   15m
+persistentvolumeclaim/data-mysql-2   Bound    pvc-99f98294-85f6-4a69-8f50-eb454ed00868   5Gi        RWO            storage-class-nas   14m
+persistentvolumeclaim/data-mysql-3   Bound    pvc-8758aaaa-33ab-4b6c-ba42-874ce6028a49   5Gi        RWO            storage-class-nas   6m18s
 ```
 
 Also, if the second tab is still open, you should start seeing new _id_ ('103' anyone?):
@@ -194,7 +194,12 @@ namespace "mysql" deleted
 # SCENARIO 04: CSI Topology
 #########################################################################################
 
-**GOAL:**  
+____
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario04* please ensure that you are in this folder now. You can do this with the command** 
+```console
+cd /home/user/tridenttraining/scenario04
+```
+____
 
 Some details about CSI Topology:
 
@@ -209,12 +214,6 @@ In a real environment, you will probably use a different storage platform in eac
 
 <p align="center"><img src="Images/topology.jpg"></p>
 
-____
-**Remember: All required files are in the folder */home/user/tridenttraining/scenario04* please ensure that you are in this folder now. You can do this with the command** 
-```console
-cd /home/user/ridenttraining/scenario04
-```
-____
 
 
 
@@ -355,8 +354,8 @@ If you take a look the POD yaml files, you will notice I have used the **nodeAff
 
 As expected:
 
-- the **WEST** Pod should run on either **worker1** or **worker2**
-- the **EAST** Pod should run on **worker3** 
+- the **WEST** Pod should run on either **cp1** or **cp2**
+- the **EAST** Pod should run on **cp3** 
 
 ```bash
 kubectl create -n topology -f pod-busybox-west.yaml
@@ -380,21 +379,27 @@ Finally, let's check that our 2 PODs have been created on the right hosts, as ex
 kubectl get pod -n topology -o wide
 ```
 ```bash
-NAME              READY   STATUS    RESTARTS   AGE     IP          NODE                         NOMINATED NODE   READINESS GATES
-busybox-east      1/1     Running   0          97s     10.44.0.8   worker3.rke1.demo.netapp.com   <none>           <none>
-busybox-west      1/1     Running   0          92s     10.36.0.5   worker1.rke1.demo.netapp.com   <none>           <none>
+NAME           READY   STATUS    RESTARTS   AGE   IP               NODE                       NOMINATED NODE   READINESS GATES
+busybox-east   1/1     Running   0          15s   172.27.36.236    cp3.rke1.demo.netapp.com   <none>           <none>
+busybox-west   1/1     Running   0          16s   172.27.220.215   cp2.rke1.demo.netapp.com   <none>           <none>
 ```
 
-# TODO include check on storage to see that the volumes have been created with different prefixes!!!
 Last check, each volume in ONTAP should have a prefix related to its region:
 
 ```bash
 ssh cluster1 vol show -vserver svm1 -volume *st_pvc*
 ```
 
+```console
+Vserver   Volume       Aggregate    State      Type       Size  Available Used%
+--------- ------------ ------------ ---------- ---- ---------- ---------- -----
+svm1      east_pvc_c44931e7_5ffa_4dd1_a2f8_afcbf3a9d1b7 aggr1_cluster1_02 online RW 5GB 5.00GB  0%
+svm1      west_pvc_439d3d23_924f_49e8_84b8_51a9c6d42247 aggr1_cluster1_01 online RW 5GB 5.00GB  0%
+2 entries were displayed.
+```
+
 ## Cleanup the environment
 
 ```bash
-$ kubectl delete namespace topology
-namespace "topology" deleted
+kubectl delete namespace topology
 ```
