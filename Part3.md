@@ -73,7 +73,22 @@ kubectl apply -n busybox -f busybox.yaml
 kubectl get -n busybox all,pvc
 ```
 
-The last line will provide you an output of our example environment. There should be one running pod and a pvc with 10Gi.
+The last line will provide you an output of our example environment. There should be one running pod and a pvc with 10Gi.  
+
+Before we continue, let's have a quick look at the ONTAP System and the regarding volume:
+
+```console
+export VOLUME=$(kubectl get pv $( kubectl get pvc mydata -n busybox -o=jsonpath='{.spec.volumeName}') -o=jsonpath='{.spec.csi.volumeAttributes.internalName}')
+ssh cluster1 vol show -volume $VOLUME -fields size,available,percent-snapshot-space
+```
+should provide you a similar output to this:
+```console
+vserver volume                                      size    available percent-snapshot-space
+------- ------------------------------------------- ------- --------- --------------------------
+nfs_svm sr_pvc_24592dc4_1955_4e9e_82eb_843acbf3c69b 16.67GB 10.00GB   40%
+```
+We have set a 40% snapshot reserve in the backend file, space that is not taken from the PVC size.
+The overall size of the volume in ONTAP will be calculated as follows: PVC_Size / ((100 - Snap_Reserve)/100), hence the 16GB you can see here.
 
 Before we create a snapshot, let's write some data into our volume.  
 
@@ -89,8 +104,6 @@ kubectl exec -n busybox $(kubectl get pod -n busybox -o name) -- more /data/test
 
 Creating a snapshot of this volume is very simple:
 
-# Integrate ONTAP commands to show what happens at the storage level!!!
-
 ```console
 kubectl apply -n busybox -f pvc-snapshot.yaml
 ```
@@ -100,6 +113,23 @@ After it is created you can observe its details:
 kubectl get volumesnapshot -n busybox
 ```
 Your snapshot has been created !  
+But what does it translate to at the storage level?
+With ONTAP, you will end up with a ONTAP Snapshot, a ReadOnly object, which is instantaneous & space efficient!
+You can see it by browsing through System Manager, by connecting with Putty to the cluster1 profile (admin/Netapp1!) or using the following SSH command:
+
+```console
+ssh cluster1 vol snaps show -volume $VOLUME
+```
+```console
+                                                                 ---Blocks---
+Vserver  Volume   Snapshot                                  Size Total% Used%
+-------- -------- ------------------------------------- -------- ------ -----
+nfs_svm  sr_pvc_24592dc4_1955_4e9e_82eb_843acbf3c69b
+                  snapshot-2512951e-f7ba-4be5-b508-494dc1fb0bdb 160KB 0%  56%
+                  hourly.2022-07-05_0705                   196KB     0%   37%
+                  hourly.2022-07-05_0805                   216KB     0%   39%
+```
+Notice, that you may also see ONTAP scheduled snapshots. About those, you can easily access them from within the container, but only if you set the parameter snapshotDir: 'true' in the Trident Backend configuration.
 
 To experiment with the snapshot, let's delete our test file...
 ```console
@@ -133,6 +163,13 @@ This will create a new pvc which could be used instantly in an application. You 
 ```console
 kubectl get pvc -n busybox
 ```
+Your clone has been created, but what does it translate to at the storage level?
+With ONTAP, you will end up with a FlexClone, which is instantaneous & space efficient!
+Said differently, you can imagine it as a ReadWrite snapshot...
+You can see this object by browsing through System Manager, by connecting with Putty to the cluster1 profile (admin/Netapp1!) or other means:
+```console
+
+
 
 Recover the data of your application
 
