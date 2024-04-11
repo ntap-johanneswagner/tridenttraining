@@ -49,6 +49,21 @@ spec:
 
 There are a lot more options you could provide in a backend configuration and all of them are listed in our documentation. 
 
+Apply now the secret and the backend configuration to get the second backend:
+
+```console
+kubectl apply -f ontap-svm1-secret.yaml
+kubectl apply -f san-backend.yaml
+```
+
+If you now check for the available backends, you should have not only one, but two:
+
+```console
+kubectl get tbe -n trident
+```
+
+
+
 Let's see what StorageClasses have already in the cluster 
 
 ```console
