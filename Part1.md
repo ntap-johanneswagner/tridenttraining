@@ -68,7 +68,7 @@ Finally, wait until all pods are up and running again, it should look like this:
 
 ```console
 NAME                                  READY   STATUS    RESTARTS   AGE
-trident-controller-6fb56b475f-zc2bl   7/7     Running   0          3h
+trident-controller-6fb56b475f-zc2bl   7/7     Running   0          4m25s
 trident-node-linux-hjknt              2/2     Running   0          5m25s
 trident-node-linux-lxtfq              2/2     Running   0          5m26s
 trident-node-linux-sn9ld              2/2     Running   0          5m13s

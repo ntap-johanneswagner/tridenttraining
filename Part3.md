@@ -465,10 +465,10 @@ You can either login to System Manager & count, or run the following (password N
 ssh cluster1 vol show -vserver svm1 | grep svm1 | wc -l
 ```
 
-In my case, I have 19 volumes, I will then set the maximum to 21 for this exercise.
+In my case, I have 21 volumes, I will then set the maximum to 23 for this exercise.
 
 ```bash
-ssh cluster1 vserver modify -vserver svm1 -max-volumes 21
+ssh cluster1 vserver modify -vserver svm1 -max-volumes 23
 ```
 
 If you would like to check if the command has well been taken into account, you can run the following command:
@@ -479,7 +479,7 @@ ssh cluster1 vserver show -vserver svm1 -fields max-volumes
 ```bash
 vserver    max-volumes
 -------    -----------
-svm1    21
+svm1       23
 ```
 
 Let's try to create a few new PVC.
