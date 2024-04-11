@@ -125,7 +125,7 @@ kubectl get volumesnapshot -n busybox
 Your snapshot has been created !  
 But what does it translate to at the storage level?
 With ONTAP, you will end up with a ONTAP Snapshot, a ReadOnly object, which is instantaneous & space efficient!
-You can see it by browsing through System Manager, by connecting with Putty to the cluster1 profile (admin/Netapp1!) or using the following SSH command:
+You can see this object by browsing through System Manager or via ssh:
 
 ```console
 ssh cluster1 vol snaps show -volume $VOLUME
@@ -174,7 +174,7 @@ kubectl get pvc -n busybox
 Your clone has been created, but what does it translate to at the storage level?
 With ONTAP, you will end up with a FlexClone, which is instantaneous & space efficient!
 Said differently, you can imagine it as a ReadWrite snapshot...
-You can see this object by browsing through System Manager, by connecting with Putty to the cluster1 profile (admin/Netapp1!) or other means:
+You can see this object by browsing through System Manager or via ssh:
 ```console
 ssh cluster1 volume clone show -parent-volume $VOLUME
 ```
