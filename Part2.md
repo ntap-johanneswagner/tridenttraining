@@ -386,6 +386,11 @@ busybox-west      1/1     Running   0          92s     10.36.0.5   worker1.rke1.
 ```
 
 # TODO include check on storage to see that the volumes have been created with different prefixes!!!
+Last check, each volume in ONTAP should have a prefix related to its region:
+
+```bash
+ssh cluster1 vol show -vserver svm1 -volume *st_pvc*
+```
 
 ## Cleanup the environment
 
