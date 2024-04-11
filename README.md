@@ -7,7 +7,7 @@ You will connect to a Linux jumphost from which you can access the training envi
 It will provide you two K8s clusters (rke1, rke2), two ONTAP Clusters,Tridend with preconfigured backend and a preconfigured nas storageclass.  
 Usefull things to know:
 
-You can switch between the K8s clusters by simply using the alias rke1 and rke2. They will automatically run the export command for the specific kubeconfig of each cluster. If you want to do that manually, you can use the following:
+You can switch between the K8s clusters by simply using the alias _rke1_ and _rke2_. They will automatically run the export command for the specific kubeconfig of each cluster. If you want to do that manually, you can use the following:
 rke1
 ```console
 export KUBECONFIG=/home/user/kubeconfigs/rke1/kube_config_cluster.yml
