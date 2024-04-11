@@ -19,6 +19,10 @@ To login use the username *admin@demo.netapp.com* and the password *Netapp1!*
 
 <p align="center"><img src="Images/protect/acclogin.png" width="640"></p>
 
+We want to work with execution hooks to set the database of pacman into a consistent state. To use execution hooks, we first have to enable this in the ACC UI.
+
+<p align="center"><img src="Images/protect/enableexechooks.png" width="640"></p>
+
 Pacman runs on RKE1, so let's discover it in ACC.  
 You can either browse through the numerous namespaces already present on RKE1 (_not that many_ ...), or filter directly with the namespace name:  
 <p align="center"><img src="Images/protect/1_ACC_Define_Pacman_App.png" width="640"></p>
