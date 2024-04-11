@@ -10,11 +10,45 @@ ____
 In this scenario, you will create two StorageClasses, discovery their capabilities, create PVCs and do some basic troubleshooting. 
 ## 1. Backends and StorageClasses
 You are using NetApp Astra Trident as the CSI driver in this lab. It is running in the namespace *trident*.
-The backends in this environment are allready created. Take a brief moment to review them:
+One backend in this environment are allready created. Take a brief moment to review them:
 
 ```console
 kubectl get tbe -n trident
 ```
+
+As we've told in the theory session, in many cases just working with NAS protocols is not enough. Therefore we want to create a second backend, so we can use iSCSI too.  
+Trident needs to access the ONTAP system and as for every access we need some credentials. Trident supports username & password, certificates and Active-Directory Accounts. To keep it easy we will use username & password.
+To avoid having the credentials in plain text, we will create a secret so that they are at least stored encoded in k8s.
+The file is allready prepared, let's have a look at it:
+
+```console
+cat ontap-svm1-secret.yaml
+```
+
+Also we've prepared the backend configuration for you, lets also have a look:
+
+```console
+cat san-backend.yaml
+```
+
+```yaml
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-ontap-san
+  namespace: trident
+spec:
+  version: 1
+  backendName: svm1-san
+  storageDriverName: ontap-san
+  managementLIF: 192.168.0.133
+  storagePrefix: san_
+  credentials:
+    name: ontap-svm1-secret
+```
+
+There are a lot more options you could provide in a backend configuration and all of them are listed in our documentation. 
+
 Let's see what StorageClasses have already in the cluster 
 
 ```console
