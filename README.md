@@ -4,7 +4,7 @@
 You will work in the NetApp Lab on Demand environment, but we`ve prepared some more resources for you than the typical lab guide offers. A special thanks to our dear trusted colleague Yves Weisser (https://github.com/YvosOnTheHub) who created a lot of the code we are using in this lab. Before you can start, there are some preparations to do.
 
 You will connect to a Linux jumphost from which you can access the training environment.
-It will provide you two K8s clusters (rke1, rke2), two ONTAP Clusters,Tridend with preconfigured backend and a preconfigured nas storageclass.  
+It will provide you two K8s clusters (rke1, rke2), two ONTAP Clusters, Trident with preconfigured backend and a preconfigured nas storageclass.  
 Usefull things to know:
 
 You can switch between the K8s clusters by simply using the alias _rke1_ and _rke2_. They will automatically run the export command for the specific kubeconfig of each cluster. If you want to do that manually, you can use the following:
