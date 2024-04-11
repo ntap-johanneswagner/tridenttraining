@@ -163,11 +163,10 @@ Now, a little clean up at the end:
 kubectl delete ns busybox
 ```
 
-## :trident: Scenario 06 - Consumption control 
+## :trident: Scenario 06 - Consumption control with Kubernetes
 ___
 **Remember: All required files are in the folder */home/user/tridenttraining/scenario06*. Please ensure that you are in this folder. You can do this with the command**
 
-# TODO include more scenarios and some storage specific things
 
 ```console
 cd /home/user/tridenttraining/scenario06
@@ -291,4 +290,89 @@ kubectl apply -n control -f pvc-5Gi-1.yaml
 ```
 
 Magical, right?  
+
+## :trident: Scenario 07 - Consumption control with Trident
+___
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario07*. Please ensure that you are in this folder. You can do this with the command**
+
+```console
+cd /home/user/tridenttraining/scenario07
+```
+
+You have two options to control space within Trident:
+
+- Backend parameter _limitVolumeSize_
+- Backend parameter _limitAggregateUsage_
+
+_limitAggregateUsage_ has two major disadvantages which hit mainly in shared environments:
+
+1. It does not refer to the space used only by Trident, but really the overall space (example: limit set to 50%, aggregate already filled up to 45% by a virtualized environment: 5% left for Trident)
+2. It requires CLUSTER ADMIN credentials
+
+Due to this, the setting _limitAggregateUsage_ is rarely used.
+
+In contrast, _limitVolumeSize_ is often utilized to get better control.
+Depending on the driver, this parameter will
+
+1. control the PVC Size (ex: driver ONTAP-NAS)
+2. control the size of the ONTAP volume hosting PVC (ex: drivers ONTAP-NAS-ECONOMY or ONTAP-SAN-ECONOMY)
+
+<p align="center"><img src="Images/scenario07_limitvolsize.JPG"></p>
+
+Let's create a backend with this parameter setup (limitVolumeSize = 5g), followed by the storage class that points to it, using the storagePools parameter:
+
+```bash
+kubectl create -n trident -f backend_nas-limitvolumesize.yaml
+kubectl create -f sc-backend-limit-volume.yaml
+```
+
+Let's see the behavior of the PVC creation, using the pvc-10Gi-volume.yaml file.
+
+```bash
+kubectl create -f pvc-10Gi-volume.yaml
+kubectl get pvc
+```
+```bash
+NAME      STATUS    VOLUME                                  CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+10gvol    Pending                                                                     sclimitvolumesize   10s
+```
+
+The PVC will remain in the _Pending_ state. You need to look either in the PVC logs or Trident's
+
+```bash
+kubectl describe pvc 10gvol
+```
+```bash
+Name:          10gvol
+Namespace:     default
+StorageClass:  sclimitvolumesize
+Status:        Pending
+Volume:
+Labels:        <none>
+Annotations:   volume.beta.kubernetes.io/storage-provisioner: csi.trident.netapp.io
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:
+Access Modes:
+VolumeMode:    Filesystem
+Mounted By:    <none>
+Events:
+  Type     Reason                Age                    From                                                                                     Message
+  ----     ------                ----                   ----                                                                                     -------
+  Normal   Provisioning          2m32s (x9 over 6m47s)  csi.trident.netapp.io_trident-csi-6b778f79bb-scrzs_7d29b71e-2259-4287-9395-c0957eb6bd88  External provisioner is provisioning volume for claim "default/10gvol"
+  Normal   ProvisioningFailed    2m32s (x9 over 6m47s)  csi.trident.netapp.io                                                                    encountered error(s) in creating the volume: [Failed to create volume pvc-19b8363f-23d6-43d1-b66f-e4539c474063 on storage pool aggr1 from backend nas-limit-volsize: requested size: 10737418240 > the size limit: 5368709120]
+  Warning  ProvisioningFailed    2m32s (x9 over 6m47s)  csi.trident.netapp.io_trident-csi-6b778f79bb-scrzs_7d29b71e-2259-4287-9395-c0957eb6bd88  failed to provision volume with StorageClass "sclimitvolumesize": rpc error: code = Unknown desc = encountered error(s) in creating the volume: [Failed to create volume pvc-19b8363f-23d6-43d1-b66f-e4539c474063 on storage pool aggr1 from backend nas-limit-volsize: requested size: 10737418240 > the size limit: 5368709120]
+  Normal   ExternalProvisioning  41s (x26 over 6m47s)   persistentvolume-controller                                                              waiting for a volume to be created, either by external provisioner "csi.trident.netapp.io" or manually created by system administrator
+```
+
+The error is now identified...  
+You can decide to review the size of the PVC, or you can next ask the admin to update the Backend definition in order to go on.
+
+To clean up, use the following.
+
+```bash
+kubectl delete pvc 10gvol
+kubectl delete sc sclimitvolumesize
+kubectl delete -n trident tbc backend-tbc-ontap-nas-limit-volsize
+kubectl delete -n trident secret ontap-cluster-secret-username
+```
 
