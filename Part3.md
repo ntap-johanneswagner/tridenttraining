@@ -78,10 +78,10 @@ The last line will provide you an output of our example environment. There shoul
 Before we create a snapshot, let's write some data into our volume.  
 
 ```console
-kubectl exec -n busybox $(kubectl get pod -n busybox -o name) -- sh -c 'echo "Hello little Container, it's me Trident. I will care about your persistent data" > /data/test.txt'
+kubectl exec -n busybox $(kubectl get pod -n busybox -o name) -- sh -c 'echo "Hello little Container! Trident will care about your persistent Data!" > /data/test.txt'
 ```
 
-This creates the file test.txt and writes "Hello little Container, it's me Trident. I will care about your persistent data" into it. You can verify the file contents:
+This creates the file test.txt and writes "Hello little Container! Trident will care about your persistent Data!" into it. You can verify the file contents:
 
 ```console
 kubectl exec -n busybox $(kubectl get pod -n busybox -o name) -- more /data/test.txt
