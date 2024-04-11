@@ -82,13 +82,23 @@ export VOLUME=$(kubectl get pv $( kubectl get pvc mydata -n busybox -o=jsonpath=
 ssh cluster1 vol show -volume $VOLUME -fields size,available,percent-snapshot-space
 ```
 should provide you a similar output to this:
+
 ```console
-vserver volume                                      size    available percent-snapshot-space
-------- ------------------------------------------- ------- --------- --------------------------
-nfs_svm sr_pvc_24592dc4_1955_4e9e_82eb_843acbf3c69b 16.67GB 10.00GB   40%
+vserver volume                                           size available percent-snapshot-space 
+------- ------------------------------------------------ ---- --------- ---------------------- 
+svm1    trident_pvc_307c2390_6ac8_4570_b518_4baca392295c 10GB 10.00GB   0%  
 ```
+
+In our case, there is no snapshot reserve set in the backend configuration. Imagine there would have been one set, and the value would be 40%. This would result in something similar to this:
+
+```console
+vserver volume                                           size    available percent-snapshot-space 
+------- ------------------------------------------------ ------- --------- ---------------------- 
+svm1    trident_pvc_307c2390_6ac8_4570_b518_4baca392295c 16.67GB 10.00GB   40%  
+```
+
 We have set a 40% snapshot reserve in the backend file, space that is not taken from the PVC size.
-The overall size of the volume in ONTAP will be calculated as follows: PVC_Size / ((100 - Snap_Reserve)/100), hence the 16GB you can see here.
+The overall size of the volume in ONTAP will be calculated as follows: PVC_Size / ((100 - Snap_Reserve)*100), hence the 16GB you can see here.
 
 Before we create a snapshot, let's write some data into our volume.  
 
@@ -124,10 +134,8 @@ ssh cluster1 vol snaps show -volume $VOLUME
                                                                  ---Blocks---
 Vserver  Volume   Snapshot                                  Size Total% Used%
 -------- -------- ------------------------------------- -------- ------ -----
-nfs_svm  sr_pvc_24592dc4_1955_4e9e_82eb_843acbf3c69b
-                  snapshot-2512951e-f7ba-4be5-b508-494dc1fb0bdb 160KB 0%  56%
-                  hourly.2022-07-05_0705                   196KB     0%   37%
-                  hourly.2022-07-05_0805                   216KB     0%   39%
+svm1     trident_pvc_307c2390_6ac8_4570_b518_4baca392295c
+                  snapshot-35338812-0798-453f-b065-8ecf33230fc2 168KB 0%  34%
 ```
 Notice, that you may also see ONTAP scheduled snapshots. About those, you can easily access them from within the container, but only if you set the parameter snapshotDir: 'true' in the Trident Backend configuration.
 
@@ -168,7 +176,15 @@ With ONTAP, you will end up with a FlexClone, which is instantaneous & space eff
 Said differently, you can imagine it as a ReadWrite snapshot...
 You can see this object by browsing through System Manager, by connecting with Putty to the cluster1 profile (admin/Netapp1!) or other means:
 ```console
+ssh cluster1 volume clone show -parent-volume $VOLUME
+```
 
+```console
+                                                         Parent  Parent                                           Parent
+Vserver FlexClone                                        Vserver Volume                                           Snapshot                                      State  Type
+------- ------------------------------------------------ ------- ------------------------------------------------ --------------------------------------------- ------ --
+svm1    trident_pvc_5be71ebd_6ae8_4279_a637_d6f5a549fcf3 svm1    trident_pvc_307c2390_6ac8_4570_b518_4baca392295c snapshot-35338812-0798-453f-b065-8ecf33230fc2 online RW
+```
 
 
 Recover the data of your application
