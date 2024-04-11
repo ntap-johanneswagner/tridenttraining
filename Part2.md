@@ -402,4 +402,7 @@ svm1      west_pvc_439d3d23_924f_49e8_84b8_51a9c6d42247 aggr1_cluster1_01 online
 
 ```bash
 kubectl delete namespace topology
+kubectl delete -f sc-topology.yaml
+kubectl delete -n trident -f backend-east.yaml 
+kubectl delete -n trident -f backend-west.yaml
 ```
