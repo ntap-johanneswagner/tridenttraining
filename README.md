@@ -43,6 +43,6 @@ We split the lab into multiple parts:
 
 [Part 3 - Snapshots & Clones, Consumption Control](Part3.md)
 
-[Bonus - Backup & Restore with Astra Control](Bonus.md)
+[Part4 - Backup & Restore with Astra Control](Part4.md)
 
 
