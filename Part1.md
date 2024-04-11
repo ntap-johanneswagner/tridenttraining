@@ -61,7 +61,11 @@ If you now check for the available backends, you should have not only one, but t
 ```console
 kubectl get tbe -n trident
 ```
-
+```console
+NAME        BACKEND    BACKEND UUID
+tbe-44z2w   svm1-nas   6f3ae41c-a0b4-4850-9c60-a4eac0785220
+tbe-c89br   svm1-san   10dd06e2-072c-45cb-bf4f-fa5d7fc29a96
+```
 
 
 Let's see what StorageClasses have already in the cluster 
