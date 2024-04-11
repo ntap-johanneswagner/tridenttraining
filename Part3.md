@@ -163,7 +163,7 @@ Now, a little clean up at the end:
 kubectl delete ns busybox
 ```
 
-## :trident: Scenario 06 - Consumption control with Kubernetes
+## :trident: Scenario 06 - Consumption control in Kubernetes
 ___
 **Remember: All required files are in the folder */home/user/tridenttraining/scenario06*. Please ensure that you are in this folder. You can do this with the command**
 
@@ -291,7 +291,7 @@ kubectl apply -n control -f pvc-5Gi-1.yaml
 
 Magical, right?  
 
-## :trident: Scenario 07 - Consumption control with Trident
+## :trident: Scenario 07 - Consumption control in Trident
 ___
 **Remember: All required files are in the folder */home/user/tridenttraining/scenario07*. Please ensure that you are in this folder. You can do this with the command**
 
@@ -376,3 +376,106 @@ kubectl delete -n trident tbc backend-tbc-ontap-nas-limit-volsize
 kubectl delete -n trident secret ontap-cluster-secret-username
 ```
 
+## :trident: Scenario 08 - Consumption control in ONTAP
+___
+**Remember: All required files are in the folder */home/user/tridenttraining/scenario08*. Please ensure that you are in this folder. You can do this with the command**
+
+```console
+cd /home/user/tridenttraining/scenario08
+```
+
+An ONTAP admin can create various tenants (ie SVM) and apply parameters to control:
+- the number of FlexVol the SVM can host
+- the capacity the SVM can use
+
+The first parameter can be demonstrated and tested in this lab.  
+However, the second feature is available with ONTAP 9.13, which would require a few uprades on this lab.  
+
+## 1. Control the number of FlexVols
+
+The amount of ONTAP volumes (Flexvols) you can have on a ONTAP cluster depends on several parameters:
+
+- version
+- size of the ONTAP cluster (in terms of controllers)  
+
+If the storage platform is also used by other workloads (Databases, Files Services ...), you may want to limit the number of PVC you build in your storage Tenant (ie SVM)
+[This can be achieved by setting a parameter on this SVM](https://docs.netapp.com/us-en/trident/trident-reco/storage-config-best-practices.html#limit-the-maximum-volume-count).  
+
+<p align="center"><img src="Images/scenario08_1.JPG"></p>
+
+Before setting a limit in the SVM _svm1_, you first need to look for the current number of volumes you have.
+You can either login to System Manager & count, or run the following (password Netapp1!)
+
+```bash
+ssh cluster1 vol show -vserver svm1 | grep svm1 | wc -l
+```
+
+In my case, I have 19 volumes, I will then set the maximum to 21 for this exercise.
+
+```bash
+ssh cluster1 vserver modify -vserver svm1 -max-volumes 21
+```
+
+If you would like to check if the command has well been taken into account, you can run the following command:
+
+```bash
+ssh cluster1 vserver show -vserver svm1 -fields max-volumes
+```
+```bash
+vserver    max-volumes
+-------    -----------
+svm1    21
+```
+
+Let's try to create a few new PVC.
+
+```bash
+kubectl create -f pvc-ontap-1.yaml
+kubectl create -f pvc-ontap-2.yaml
+kubectl create -f pvc-ontap-3.yaml
+kubectl get pvc  -l scenario=ontap
+```
+```bash
+NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+ontaplimit-1   Bound     pvc-a74622aa-bb26-4796-a624-bf6d72955de8   1Gi        RWX            storage-class-nas   92s
+ontaplimit-2   Bound     pvc-f2bd901a-35e8-45a1-8294-2135b56abe19   1Gi        RWX            storage-class-nas   22s
+ontaplimit-3   Pending                                                                        storage-class-nas   4s
+```
+
+The PVC will remain in the _Pending_ state. You need to look either in the PVC logs or Trident's
+
+```bash
+kubectl describe pvc ontaplimit-3
+```
+```bash
+...
+ Warning  ProvisioningFailed    15s  
+ API status: failed, Reason: Cannot create volume. Reason: Maximum volume count for Vserver svm1 reached.  Maximum volume count is 21. , Code: 13001
+...
+```
+
+There you go, point demonstrated!
+
+Time to clean up
+
+```bash
+kubectl delete pvc -l scenario=ontap
+```
+```bash
+persistentvolumeclaim "ontaplimit-1" deleted
+persistentvolumeclaim "ontaplimit-2" deleted
+persistentvolumeclaim "ontaplimit-3" deleted
+```
+
+## 2. Limit the capacity
+
+ONTAP 9.13.1 introduced the possibility to set a capacity limit per SVM, as well as a threshold against which alerts will be sent.  
+
+<p align="center"><img src="Images/scenario08_2.png"></p>
+
+This can be configured in System Manager or through CLI with the following command:  
+```bash
+vserver modify -vserver vserver_name -storage-limit value [GiB|TIB] -storage-limit-threshold-alert percentage
+```
+
+Together, these two features really bring more control to the storage team, especially when multiple environments are in play.  
