@@ -37,7 +37,7 @@ replicaset.apps/trident-controller-6fb56b475f   1         1         1       24h
 replicaset.apps/trident-operator-59ff7cbd84     1         1         1       24h
 ```
 
-Remember we have 3 worker nodes in this environment, this is the reason why we also have the deamonset/trident-node-linux has the desired state of 3.
+Remember we have 3 worker nodes in this environment, this is the reason why the deamonset/trident-node-linux has the desired state of 3.
 Besides this we are also able to see our deployment of the trident-controller.
 
 To restart the trident-node-linux deamonset, we utilize the kubectl rollout restart method
@@ -85,7 +85,7 @@ ____
 In this scenario, you will create two StorageClasses, discovery their capabilities, create PVCs and do some basic troubleshooting. 
 ## 1. Backends and StorageClasses
 You are using NetApp Astra Trident as the CSI driver in this lab. It is running in the namespace *trident*.
-One backend in this environment are allready created. Take a brief moment to review them:
+One backend in this environment are already created. Take a brief moment to review them:
 
 ```console
 kubectl get tbe -n trident
@@ -94,7 +94,7 @@ kubectl get tbe -n trident
 As we've told in the theory session, in many cases just working with NAS protocols is not enough. Therefore we want to create a second backend, so we can use iSCSI too.  
 Trident needs to access the ONTAP system and as for every access we need some credentials. Trident supports username & password, certificates and Active-Directory Accounts. To keep it easy we will use username & password.
 To avoid having the credentials in plain text, we will create a secret so that they are at least stored encoded in k8s.
-The file is allready prepared, let's have a look at it:
+The file is already prepared, let's have a look at it:
 
 ```console
 cat ontap-svm1-secret.yaml
@@ -124,12 +124,23 @@ spec:
 
 There are a lot more options you could provide in a backend configuration and all of them are listed in our documentation. 
 
-Apply now the secret and the backend configuration to get the second backend:
+Now apply the secret and the backend configuration to get the second backend:
 
 ```console
 kubectl apply -f ontap-svm1-secret.yaml
 kubectl apply -f san-backend.yaml
 ```
+
+You can check if the backend config was applied successfully:
+
+```console
+kubectl get tbc -n trident
+```
+```console
+NAME                BACKEND NAME   BACKEND UUID                           PHASE   STATUS
+backend-ontap-san   svm1-san       9a7150ef-4b01-4b4e-abdf-f7fd2bdfdd2f   Bound   Success
+```
+
 
 If you now check for the available backends, you should have not only one, but two:
 
@@ -149,7 +160,7 @@ Let's see what StorageClasses have already in the cluster
 kubectl get sc
 ```
 
-It will show you that you have already one storageclas calles sc-nas-svm1. 
+It will show you one existing storageclass called sc-nas-svm1. 
 
 You can have a closer look with the following command:
 
@@ -224,7 +235,7 @@ The workflow isn't complex but important to understand.
 1. A user creates a PersistentVolumeClaim requesting a new PersistentVolume of a particular size from a Kubernetes StorageClass that was previously configured by someone.
 2. The Kubernetes StorageClass identifies the CSI driver - in our case Trident - and includes parameters that tell Trident how to provision a volume for the requested class.
 3. Trident provisions storage on a matching backend and creates a PersistentVolume in Kubernetes that tells Kubernetes how to find, mount, and treat the volume.
-4. Kubernetes binds the PersistentVolumeClaim to the new PersistentVolume. Pods that include the PersistentVolumeClaim can now mount the PersistentVolume on any host that they runs on.
+4. Kubernetes binds the PersistentVolumeClaim to the new PersistentVolume. Pods that include the PersistentVolumeClaim can now mount the PersistentVolume on any host that they run on.
 
 There are two files in your scenario01 folder, *firstpvc.yaml* and *secondpvc.yaml*, both a requesting a 5GiB Volume. Let's create a namespace first, called *funwithpvcs*. We then get the storage into this namespace...
 
@@ -459,7 +470,7 @@ kubectl -n resize exec busyboxfile -- df -h /data
 
 Resizing a PVC can be done in different ways. We will edit the original yaml file of the PVC & apply it again it.  
 Look for the *storage* parameter in the spec part of the definition & change the value (in this example, we will use 15GB)
-The provided command will open the pvc definition.
+The provided command will open the pvc definition. (Note: You may use VS Code from the GUI to edit the file, if you are not familiar with vi).
 
 ```console
 vi pvc.yaml
