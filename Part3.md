@@ -98,7 +98,7 @@ svm1    trident_pvc_307c2390_6ac8_4570_b518_4baca392295c 16.67GB 10.00GB   40%
 ```
 
 We have set a 40% snapshot reserve in the backend file, space that is not taken from the PVC size.
-The overall size of the volume in ONTAP will be calculated as follows: PVC_Size / ((100 - Snap_Reserve)*100), hence the 16GB you can see here.
+The overall size of the volume in ONTAP will be calculated as follows: PVC_Size / ((100 - Snap_Reserve)/100), hence the 16GB you can see here.
 
 Before we create a snapshot, let's write some data into our volume.  
 
