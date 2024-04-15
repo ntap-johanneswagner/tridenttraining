@@ -1,14 +1,9 @@
 # Hands-on Part 1
 
-## Prelude - Restarting Trident
+## Prelude - Inspecting Trident
 
-We know it from the good old times, one basic and way to often working methology is rebooting/ restarting things.  
-While k8s tries to care about the restart in cases like container crashes, there are also scenarios where a soft restart is required.  
-A prominent example is if there is a change to the svm-aggregate-assignement. Trident gets this information during it's start and if a backend is (re)initialized. If something changes afterwards, Trident is not aware of this and might run into errors. 
+The lab has Trident already installed and configured. Let's start by inspecting the Trident deployment a bit...
 
-As this is a lab environment with a lot of virtual things and the labs are up since a while, it might be good to do a restart of the controller and the deamonset to have everything smooth. Also it's a good practice so you are aware afterwards how to do it.
-
-First lets have a look what kind of ressources we have:
 
 ```console
 kubectl get all -n trident
@@ -38,7 +33,9 @@ replicaset.apps/trident-operator-59ff7cbd84     1         1         1       24h
 ```
 
 Remember we have 3 worker nodes in this environment, this is the reason why the deamonset/trident-node-linux has the desired state of 3.
-Besides this we are also able to see our deployment of the trident-controller.
+Besides this we are also able to see our deployment of the trident-controller and the Operator that handles deployment and updates. 
+
+To see deployments, daemonsets and replicasets in action, let's restart some of the components. Note that this also re-initiates the state of the running Trident instance (e.g. something you might do after changing SVM aggregate assignments or similar changes). 
 
 To restart the trident-node-linux deamonset, we utilize the kubectl rollout restart method
 
@@ -58,7 +55,7 @@ kubectl get pods -n trident --watch
 
 This will rerun the command again and again and shows changes in the output by a single additional line. To stop the command press ctrl+c (sometimes the keyboard mapping is weird in the lab, then just close and reopen the terminal)
 
-Restarting the controller is quiet similar, please also restart the controller
+Restarting the controller is quiet similar, run the following command to restart the controller:
 
 ```console
 kubectl rollout restart deployment/trident-controller -n trident
